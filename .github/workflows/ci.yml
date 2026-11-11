@@ -1,0 +1,59 @@
+name: Trekko API CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests with coverage thresholds
+        run: npm run test:cov
+
+      - name: Integration tests
+        run: npm run test:int
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build
+
+      - name: Start development stack
+        run: docker compose up -d --build --wait
+
+      - name: Export OpenAPI document
+        run: npm run openapi:export
+
+      - name: Upload OpenAPI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trekko-openapi
+          path: docs/openapi.json
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Stop development stack
+        if: always()
+        run: docker compose down --volumes

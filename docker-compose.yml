@@ -1,0 +1,113 @@
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    container_name: trekko-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trekko}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trekko}
+      POSTGRES_DB: ${POSTGRES_DB:-trekko}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: bitnamilegacy/minio:latest
+    container_name: trekko-minio
+    restart: unless-stopped
+    command:
+      [
+        '/opt/bitnami/minio/bin/minio',
+        'server',
+        '/bitnami/minio/data',
+        '--console-address',
+        ':9001',
+      ]
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-minio}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-minio12345}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/bitnami/minio/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio-init:
+    image: bitnamilegacy/minio-client:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ['/bin/bash', '-e', '-c']
+    command:
+      - |
+        until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"; do sleep 2; done
+        mc mb --ignore-existing "local/$${STORAGE_BUCKET}"
+        mc mb --ignore-existing "local/$${STORAGE_PRIVATE_BUCKET}"
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-minio}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-minio12345}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-trekko}
+      STORAGE_PRIVATE_BUCKET: ${STORAGE_PRIVATE_BUCKET:-trekko-private}
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trekko-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8081}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://${POSTGRES_USER:-trekko}:${POSTGRES_PASSWORD:-trekko}@db:5432/${POSTGRES_DB:-trekko}
+      DB_SSL: 'false'
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-replace-with-at-least-32-random-characters}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-30}
+      BCRYPT_COST: ${BCRYPT_COST:-12}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-trekko}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-minio}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-minio12345}
+      STORAGE_PRIVATE_BUCKET: ${STORAGE_PRIVATE_BUCKET:-trekko-private}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-fake}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-replace-in-production}
+      PREMIUM_PRICE_MXN: ${PREMIUM_PRICE_MXN:-200}
+      PAYMENT_FEE_PERCENT: ${PAYMENT_FEE_PERCENT:-4}
+      NOTIFICATIONS_PROVIDER: ${NOTIFICATIONS_PROVIDER:-fake}
+    ports:
+      - '3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  minio_data:
