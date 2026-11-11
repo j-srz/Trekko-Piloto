@@ -24,6 +24,12 @@ interface TokenResponse {
   refreshToken: string;
 }
 
+interface TimedResponse {
+  response: Response;
+  signal: AbortSignal;
+  finish: () => void;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object';
 }
@@ -102,23 +108,54 @@ export function createApiClient({
   async function fetchWithTimeout(
     url: string,
     init: RequestInit,
-  ): Promise<Response> {
+  ): Promise<TimedResponse> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const abortFromRequest = () => controller.abort(init.signal?.reason);
+    const finish = () => {
+      clearTimeout(timeout);
+      init.signal?.removeEventListener('abort', abortFromRequest);
+    };
     if (init.signal?.aborted) abortFromRequest();
     else init.signal?.addEventListener('abort', abortFromRequest, { once: true });
 
     try {
-      return await fetcher(url, { ...init, signal: controller.signal });
+      return {
+        response: await fetcher(url, { ...init, signal: controller.signal }),
+        signal: controller.signal,
+        finish,
+      };
     } catch (cause) {
       const detail = controller.signal.aborted
         ? `La solicitud agotó el tiempo de espera (${timeoutMs} ms).`
         : 'No pudimos conectar con el servidor.';
+      finish();
+      throw new ApiError(0, { detail }, { cause }, url);
+    }
+  }
+
+  async function readTimedJson(
+    timed: TimedResponse,
+    url: string,
+  ): Promise<unknown> {
+    let rejectOnAbort: (() => void) | undefined;
+    const aborted = new Promise<never>((_resolve, reject) => {
+      rejectOnAbort = () => reject(new Error('Request aborted'));
+      if (timed.signal.aborted) rejectOnAbort();
+      else timed.signal.addEventListener('abort', rejectOnAbort, { once: true });
+    });
+
+    try {
+      return await Promise.race([readJson(timed.response), aborted]);
+    } catch (cause) {
+      if (cause instanceof ApiError) throw cause;
+      const detail = timed.signal.aborted
+        ? `La solicitud agotó el tiempo de espera (${timeoutMs} ms).`
+        : 'No pudimos conectar con el servidor.';
       throw new ApiError(0, { detail }, { cause }, url);
     } finally {
-      clearTimeout(timeout);
-      init.signal?.removeEventListener('abort', abortFromRequest);
+      if (rejectOnAbort) timed.signal.removeEventListener('abort', rejectOnAbort);
+      timed.finish();
     }
   }
 
@@ -139,13 +176,22 @@ export function createApiClient({
     }
 
     const url = `${baseUrl}${path}`;
-    const response = await fetchWithTimeout(url, { ...init, headers });
+    const timed = await fetchWithTimeout(url, { ...init, headers });
+    const { response } = timed;
 
     if (response.status === 401 && authenticated && !retried) {
-      if (await renewSession()) return send<T>(path, init, true, true);
+      try {
+        if (await renewSession()) {
+          timed.finish();
+          return send<T>(path, init, true, true);
+        }
+      } catch (error) {
+        timed.finish();
+        throw error;
+      }
     }
 
-    const body = await readJson(response);
+    const body = await readTimedJson(timed, url);
     if (!response.ok) throw new ApiError(response.status, problemFrom(body));
     if (response.status === 204) return undefined as T;
     return body as T;
@@ -157,13 +203,14 @@ export function createApiClient({
     if (!refreshToken) return false;
 
     const url = `${baseUrl}/auth/refresh`;
-    const response = await fetchWithTimeout(url, {
+    const timed = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     });
+    const { response } = timed;
 
-    const body = await readJson(response);
+    const body = await readTimedJson(timed, url);
     if (!response.ok) throw new ApiError(response.status, problemFrom(body));
     if (!isTokenResponse(body)) {
       throw new ApiError(response.status, { title: 'Respuesta de renovación inválida.' });

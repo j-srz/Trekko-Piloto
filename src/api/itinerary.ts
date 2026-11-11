@@ -10,16 +10,28 @@ export interface Municipality {
   centro: { lat: number; lng: number } | null;
 }
 
-export interface GenerateItineraryInput {
-  municipioId: string;
-  fecha: string;
-  horaInicio: string;
-  horaFin: string;
-  presupuestoMax?: number;
-  personas: number;
-  categorias?: PoiCategory[];
-  ritmo: RoutePace;
-}
+type RouteLocation =
+  | { municipioId: string; centro?: never }
+  | {
+      municipioId?: never;
+      centro: { lat: number; lng: number; radioM: number };
+    };
+
+type RouteDuration =
+  | { horaFin: string; duracionMaxMin?: never }
+  | { horaFin?: never; duracionMaxMin: number };
+
+export type GenerateItineraryInput = RouteLocation &
+  RouteDuration & {
+    fecha: string;
+    horaInicio: string;
+    presupuestoMax?: number;
+    personas: number;
+    categorias?: PoiCategory[];
+    ritmo: RoutePace;
+    puntoInicio?: { lat: number; lng: number };
+    excluirPoiIds?: string[];
+  };
 
 export interface GeneratedItineraryItem {
   poiId: string;

@@ -93,3 +93,31 @@ test('cancela solicitudes que superan el timeout y muestra su URL', async () => 
     },
   );
 });
+
+test('aplica timeout también al cuerpo de respuesta', async () => {
+  const client = createApiClient({
+    baseUrl: 'http://192.168.3.7:3000/api/v1',
+    timeoutMs: 10,
+    fetcher: async () => ({
+      ok: true,
+      status: 200,
+      text: () => new Promise(() => {}),
+    }),
+    tokenStore: {
+      async getAccessToken() {
+        return null;
+      },
+      async getRefreshToken() {
+        return null;
+      },
+      async saveTokens() {},
+      async clear() {},
+    },
+  });
+
+  await assert.rejects(client.request('/auth/me'), (error) => {
+    assert.equal(error.status, 0);
+    assert.match(error.problem.detail, /tiempo de espera/i);
+    return true;
+  });
+});
