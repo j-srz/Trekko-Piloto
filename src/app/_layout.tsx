@@ -20,7 +20,7 @@ function NavegacionProtegida() {
 
   useEffect(() => {
     if (!initialized || error) return;
-    if (user && group !== '(tabs)') router.replace('/(tabs)/inicio');
+    if (user && group === '(auth)') router.replace('/(tabs)/inicio');
     else if (!user && group !== '(auth)') router.replace('/login');
   }, [error, group, initialized, router, user]);
 
