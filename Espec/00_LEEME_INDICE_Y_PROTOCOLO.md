@@ -134,4 +134,3 @@ RIESGOS CONOCIDOS: …
 | H2 | 10 | DB-02/03, BACK-02/03/05/07, FRONT-02…05 | v0.1 en tiendas; OWASP básico superado; primeras afiliaciones |
 | H3 | 16 | DB-04, BACK-04/06, FRONT-06 | Generador + Offline-First en beta; SUS ≥ 68 |
 | H4 | 20 | FRONT-07, QA-01 final | v1.0 y piloto en San José de Gracia |
-EOF
