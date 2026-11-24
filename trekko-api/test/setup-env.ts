@@ -1,0 +1,13 @@
+process.env.NODE_ENV ??= 'test';
+process.env.PORT ??= '3000';
+process.env.APP_URL ??= 'http://localhost:3000';
+process.env.CORS_ORIGINS ??= 'http://localhost:8081';
+process.env.DATABASE_URL ??= 'postgres://trekko:trekko@127.0.0.1:5432/trekko';
+process.env.JWT_ACCESS_SECRET ??= 'unit-test-secret-that-is-at-least-32-bytes';
+process.env.DATA_ENCRYPTION_KEY ??=
+  'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=';
+process.env.STORAGE_ENDPOINT ??= 'http://127.0.0.1:9000';
+process.env.STORAGE_BUCKET ??= 'trekko';
+process.env.STORAGE_ACCESS_KEY ??= 'minio';
+process.env.STORAGE_SECRET_KEY ??= 'minio-secret';
+process.env.STORAGE_PRIVATE_BUCKET ??= 'trekko-private';

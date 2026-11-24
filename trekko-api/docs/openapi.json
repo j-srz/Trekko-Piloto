@@ -1,0 +1,2313 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "HealthController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Process is alive"
+          }
+        },
+        "summary": "Liveness probe; does not depend on external services",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_getReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Dependencies are ready"
+          },
+          "503": {
+            "description": "A required dependency is unavailable"
+          }
+        },
+        "summary": "Readiness probe for PostgreSQL and object storage",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid registration data",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already registered",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register a new Trekko account",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid login data",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Account temporarily locked",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sign in and obtain access and refresh tokens",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens rotated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid refresh token payload",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or reused refresh token",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotate a refresh token and detect reuse",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [
+          {
+            "name": "all",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Session revoked"
+          },
+          "400": {
+            "description": "Invalid refresh token payload",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired session",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke the current refresh token or its family",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the authenticated user profile",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/pois/nearby": {
+      "get": {
+        "operationId": "PoisController_nearby",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 200,
+              "example": "museo",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoria",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxItems": 8,
+              "example": [
+                "cultural"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "restaurante",
+                  "hospedaje",
+                  "artesania",
+                  "aventura",
+                  "cultural",
+                  "naturaleza",
+                  "transporte",
+                  "otro"
+                ]
+              }
+            }
+          },
+          {
+            "name": "categoria[]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "restaurante",
+                  "hospedaje",
+                  "artesania",
+                  "aventura",
+                  "cultural",
+                  "naturaleza",
+                  "transporte",
+                  "otro"
+                ]
+              },
+              "maxItems": 8,
+              "example": [
+                "cultural"
+              ]
+            }
+          },
+          {
+            "name": "municipioId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "example": "00000000-0000-4000-8000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "name": "costoMin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "costoMax",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "example": 500,
+              "type": "number"
+            }
+          },
+          {
+            "name": "abiertoAhora",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "ordenar",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "distancia",
+                "calificacion",
+                "costo"
+              ],
+              "type": "string",
+              "example": "calificacion"
+            }
+          },
+          {
+            "name": "lat",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": -90,
+              "maximum": 90,
+              "example": 19.4326,
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minimum": -180,
+              "maximum": 180,
+              "example": -99.1332,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "radioM",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50000,
+              "default": 5000,
+              "example": 5000,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nearby POIs and distance in meters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPoisResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid coordinates or filters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Find nearby points of interest using PostGIS",
+        "tags": [
+          "pois"
+        ]
+      }
+    },
+    "/api/v1/pois": {
+      "get": {
+        "operationId": "PoisController_list",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 200,
+              "example": "museo",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoria",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxItems": 8,
+              "example": [
+                "cultural"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "restaurante",
+                  "hospedaje",
+                  "artesania",
+                  "aventura",
+                  "cultural",
+                  "naturaleza",
+                  "transporte",
+                  "otro"
+                ]
+              }
+            }
+          },
+          {
+            "name": "categoria[]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "restaurante",
+                  "hospedaje",
+                  "artesania",
+                  "aventura",
+                  "cultural",
+                  "naturaleza",
+                  "transporte",
+                  "otro"
+                ]
+              },
+              "maxItems": 8,
+              "example": [
+                "cultural"
+              ]
+            }
+          },
+          {
+            "name": "municipioId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "example": "00000000-0000-4000-8000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "name": "costoMin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "costoMax",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "example": 500,
+              "type": "number"
+            }
+          },
+          {
+            "name": "abiertoAhora",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "ordenar",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "distancia",
+                "calificacion",
+                "costo"
+              ],
+              "type": "string",
+              "example": "calificacion"
+            }
+          },
+          {
+            "name": "lat",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": -90,
+              "maximum": 90,
+              "example": 19.4326,
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": -180,
+              "maximum": 180,
+              "example": -99.1332,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated POI results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPoisResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List and filter points of interest",
+        "tags": [
+          "pois"
+        ]
+      }
+    },
+    "/api/v1/pois/{id}": {
+      "get": {
+        "operationId": "PoisController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "POI detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoiResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid POI identifier",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "POI not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a POI and safe contact links",
+        "tags": [
+          "pois"
+        ]
+      }
+    },
+    "/api/v1/municipios": {
+      "get": {
+        "operationId": "MunicipalitiesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Municipality list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MunicipalityResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List available municipalities and their centers",
+        "tags": [
+          "municipios"
+        ]
+      }
+    },
+    "/api/v1/routes": {
+      "get": {
+        "operationId": "RoutesController_list",
+        "parameters": [
+          {
+            "name": "tipo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "original",
+                "comunitaria"
+              ],
+              "type": "string",
+              "example": "original"
+            }
+          },
+          {
+            "name": "municipioId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "example": "00000000-0000-4000-8000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "name": "costoMin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "example": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "costoMax",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "example": 500,
+              "type": "number"
+            }
+          },
+          {
+            "name": "duracionMin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "example": 60,
+              "type": "number"
+            }
+          },
+          {
+            "name": "duracionMax",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "example": 360,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated published routes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRoutesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid route filters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List published routes with optional filters",
+        "tags": [
+          "routes"
+        ]
+      }
+    },
+    "/api/v1/routes/generate": {
+      "post": {
+        "operationId": "RoutesController_generate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRouteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated itinerary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedItineraryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid generation constraints",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Explorer role required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate a deterministic itinerary proposal",
+        "tags": [
+          "routes"
+        ]
+      }
+    },
+    "/api/v1/routes/{id}": {
+      "get": {
+        "operationId": "RoutesController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published route detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid route identifier",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Route not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a published route with ordered POIs",
+        "tags": [
+          "routes"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Trekko API",
+    "description": "Trekko backend API documentation",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "ApiProblemDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "https://httpstatuses.com/400",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "status": {
+            "type": "number",
+            "example": 400,
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string",
+            "example": "Request failed"
+          },
+          "instance": {
+            "type": "string",
+            "example": "/api/v1/auth/register"
+          },
+          "code": {
+            "type": "string",
+            "example": "VALIDATION_ERROR"
+          },
+          "requestId": {
+            "type": "string",
+            "example": "b6f96374-0d2f-4f15-a0ec-2a6df2f437be"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "code"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Ana Viajera"
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ana@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "writeOnly": true,
+            "example": "TrekkoPass123"
+          }
+        },
+        "required": [
+          "nombre",
+          "correo",
+          "password"
+        ]
+      },
+      "SessionUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "4d0c23db-020c-4f96-9caf-69f79a68e96a"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Ana Viajera"
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "example": "ana@example.com"
+          },
+          "roles": {
+            "type": "array",
+            "example": [
+              "explorador"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "explorador",
+                "creador",
+                "anfitrion",
+                "entidad",
+                "admin"
+              ]
+            }
+          },
+          "modoActivo": {
+            "type": "string",
+            "enum": [
+              "explorador",
+              "creador",
+              "anfitrion"
+            ],
+            "example": "explorador"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "correo",
+          "roles",
+          "modoActivo"
+        ]
+      },
+      "AuthTokensResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Bearer access token",
+            "example": "eyJhbGciOiJIUzI1NiJ9..."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Single-use refresh token",
+            "example": "opaque-refresh-token"
+          },
+          "user": {
+            "$ref": "#/components/schemas/SessionUserResponseDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ana@example.com"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 72,
+            "writeOnly": true,
+            "example": "TrekkoPass123"
+          }
+        },
+        "required": [
+          "correo",
+          "password"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 32,
+            "writeOnly": true,
+            "example": "replace-with-the-refresh-token"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "UserProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "4d0c23db-020c-4f96-9caf-69f79a68e96a"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Ana Viajera"
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "example": "ana@example.com"
+          },
+          "roles": {
+            "type": "array",
+            "example": [
+              "explorador"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "explorador",
+                "creador",
+                "anfitrion",
+                "entidad",
+                "admin"
+              ]
+            }
+          },
+          "modoActivo": {
+            "type": "string",
+            "enum": [
+              "explorador",
+              "creador",
+              "anfitrion"
+            ],
+            "example": "explorador"
+          },
+          "reputacion": {
+            "type": "number",
+            "minimum": 0,
+            "example": 4.8
+          },
+          "puntosSaldo": {
+            "type": "number",
+            "minimum": 0,
+            "example": 120
+          },
+          "perfilVerificado": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "correo",
+          "roles",
+          "modoActivo",
+          "reputacion",
+          "puntosSaldo",
+          "perfilVerificado"
+        ]
+      },
+      "PoiMunicipalityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "San Miguel de Allende"
+          }
+        },
+        "required": [
+          "id",
+          "nombre"
+        ]
+      },
+      "PoiPointResponseDto": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 19.4326
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": -99.1332
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ]
+      },
+      "OpeningIntervalResponseDto": {
+        "type": "object",
+        "properties": {
+          "abre": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "09:00"
+          },
+          "cierra": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "18:00"
+          }
+        },
+        "required": [
+          "abre",
+          "cierra"
+        ]
+      },
+      "ScheduleExceptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-25"
+          },
+          "cerrado": {
+            "type": "boolean",
+            "example": true
+          },
+          "intervalos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningIntervalResponseDto"
+            }
+          }
+        },
+        "required": [
+          "fecha"
+        ]
+      },
+      "PoiScheduleResponseDto": {
+        "type": "object",
+        "properties": {
+          "zona": {
+            "type": "string",
+            "example": "America/Mexico_City"
+          },
+          "semana": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "abre": {
+                    "type": "string",
+                    "example": "09:00"
+                  },
+                  "cierra": {
+                    "type": "string",
+                    "example": "18:00"
+                  }
+                },
+                "required": [
+                  "abre",
+                  "cierra"
+                ]
+              }
+            },
+            "example": {
+              "lun": [
+                {
+                  "abre": "09:00",
+                  "cierra": "18:00"
+                }
+              ]
+            }
+          },
+          "excepciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleExceptionResponseDto"
+            }
+          },
+          "siempreAbierto": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "zona",
+          "semana"
+        ]
+      },
+      "PoiContactResponseDto": {
+        "type": "object",
+        "properties": {
+          "telefono": {
+            "type": "string",
+            "example": "+52 415 123 4567"
+          },
+          "whatsapp": {
+            "type": "string",
+            "example": "+52 415 123 4567"
+          },
+          "sitio": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com"
+          },
+          "whatsappUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://wa.me/524151234567"
+          },
+          "telefonoUrl": {
+            "type": "string",
+            "example": "tel:+524151234567"
+          }
+        }
+      },
+      "PoiResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3c78617f-5e1f-49e4-8e61-06f3c732473b"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Museo de la ciudad"
+          },
+          "descripcion": {
+            "type": "object",
+            "nullable": true,
+            "example": "Colección histórica local."
+          },
+          "categoria": {
+            "type": "string",
+            "enum": [
+              "restaurante",
+              "hospedaje",
+              "artesania",
+              "aventura",
+              "cultural",
+              "naturaleza",
+              "transporte",
+              "otro"
+            ],
+            "example": "cultural"
+          },
+          "municipio": {
+            "$ref": "#/components/schemas/PoiMunicipalityResponseDto"
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/PoiPointResponseDto"
+          },
+          "direccion": {
+            "type": "object",
+            "nullable": true,
+            "example": "Centro, calle principal 10"
+          },
+          "costoPromedio": {
+            "type": "number",
+            "minimum": 0,
+            "example": 80
+          },
+          "horario": {
+            "$ref": "#/components/schemas/PoiScheduleResponseDto"
+          },
+          "contacto": {
+            "$ref": "#/components/schemas/PoiContactResponseDto"
+          },
+          "duracionVisitaMin": {
+            "type": "number",
+            "minimum": 0,
+            "example": 90
+          },
+          "calificacionPromedio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5,
+            "example": 4.7
+          },
+          "numeroResenas": {
+            "type": "number",
+            "minimum": 0,
+            "example": 120
+          },
+          "destacado": {
+            "type": "boolean",
+            "example": false
+          },
+          "distanciaM": {
+            "type": "number",
+            "minimum": 0,
+            "example": 850
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "categoria",
+          "municipio",
+          "ubicacion",
+          "direccion",
+          "costoPromedio",
+          "horario",
+          "contacto",
+          "duracionVisitaMin",
+          "calificacionPromedio",
+          "numeroResenas",
+          "destacado"
+        ]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "minimum": 1,
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0,
+            "example": 40
+          },
+          "totalPages": {
+            "type": "number",
+            "minimum": 0,
+            "example": 2
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total",
+          "totalPages"
+        ]
+      },
+      "PaginatedPoisResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PoiResponseDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "MunicipalityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "San Miguel de Allende"
+          },
+          "esPuebloMagico": {
+            "type": "boolean",
+            "example": true
+          },
+          "centro": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PoiPointResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "esPuebloMagico",
+          "centro"
+        ]
+      },
+      "RouteMunicipalityResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "San Miguel de Allende"
+          }
+        },
+        "required": [
+          "id",
+          "nombre"
+        ]
+      },
+      "RouteAuthorResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true,
+            "example": null
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Trekko"
+          }
+        },
+        "required": [
+          "id",
+          "nombre"
+        ]
+      },
+      "RouteSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3c78617f-5e1f-49e4-8e61-06f3c732473b"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "original",
+              "comunitaria"
+            ],
+            "example": "original"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Un día en San Miguel"
+          },
+          "descripcion": {
+            "type": "object",
+            "nullable": true,
+            "example": "Recorrido por el centro histórico."
+          },
+          "costoEstimado": {
+            "type": "number",
+            "minimum": 0,
+            "example": 250
+          },
+          "duracionMin": {
+            "type": "number",
+            "minimum": 1,
+            "example": 240
+          },
+          "municipio": {
+            "$ref": "#/components/schemas/RouteMunicipalityResponseDto"
+          },
+          "autor": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RouteAuthorResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "titulo",
+          "descripcion",
+          "costoEstimado",
+          "duracionMin",
+          "municipio",
+          "autor"
+        ]
+      },
+      "PaginatedRoutesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RouteSummaryResponseDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "RouteAreaDto": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 19.4326
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": -99.1332
+          },
+          "radioM": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 50000,
+            "example": 5000
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "radioM"
+        ]
+      },
+      "GeoPointDto": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90,
+            "example": 19.4326
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180,
+            "example": -99.1332
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ]
+      },
+      "GenerateRouteDto": {
+        "type": "object",
+        "properties": {
+          "municipioId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-4000-8000-000000000001",
+            "description": "Provide this or centro, but not both."
+          },
+          "centro": {
+            "description": "Provide this or municipioId, but not both.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RouteAreaDto"
+              }
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-11-12"
+          },
+          "horaInicio": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "09:00"
+          },
+          "horaFin": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "14:30",
+            "description": "Provide this or duracionMaxMin, but not both."
+          },
+          "duracionMaxMin": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1440,
+            "example": 330
+          },
+          "presupuestoMax": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01,
+            "example": 500
+          },
+          "personas": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 20,
+            "example": 2
+          },
+          "categorias": {
+            "type": "array",
+            "maxItems": 8,
+            "example": [
+              "restaurante",
+              "cultural"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "restaurante",
+                "hospedaje",
+                "artesania",
+                "aventura",
+                "cultural",
+                "naturaleza",
+                "transporte",
+                "otro"
+              ]
+            }
+          },
+          "ritmo": {
+            "type": "string",
+            "enum": [
+              "relajado",
+              "normal",
+              "intenso"
+            ],
+            "example": "normal"
+          },
+          "puntoInicio": {
+            "$ref": "#/components/schemas/GeoPointDto"
+          },
+          "excluirPoiIds": {
+            "maxItems": 100,
+            "example": [
+              "3c78617f-5e1f-49e4-8e61-06f3c732473b"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "fecha",
+          "horaInicio",
+          "personas",
+          "ritmo"
+        ]
+      },
+      "ItineraryTransferResponseDto": {
+        "type": "object",
+        "properties": {
+          "distanciaM": {
+            "type": "number",
+            "minimum": 0,
+            "example": 850
+          },
+          "minutos": {
+            "type": "number",
+            "minimum": 0,
+            "example": 12
+          }
+        },
+        "required": [
+          "distanciaM",
+          "minutos"
+        ]
+      },
+      "ItineraryItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "poiId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3c78617f-5e1f-49e4-8e61-06f3c732473b"
+          },
+          "orden": {
+            "type": "number",
+            "minimum": 1,
+            "example": 1
+          },
+          "horaLlegada": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "09:12"
+          },
+          "horaSalida": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "10:12"
+          },
+          "duracionVisitaMin": {
+            "type": "number",
+            "minimum": 1,
+            "example": 60
+          },
+          "traslado": {
+            "$ref": "#/components/schemas/ItineraryTransferResponseDto"
+          },
+          "costo": {
+            "type": "number",
+            "minimum": 0,
+            "example": 80
+          }
+        },
+        "required": [
+          "poiId",
+          "orden",
+          "horaLlegada",
+          "horaSalida",
+          "duracionVisitaMin",
+          "traslado",
+          "costo"
+        ]
+      },
+      "ItineraryBreakdownResponseDto": {
+        "type": "object",
+        "properties": {
+          "entradas": {
+            "type": "number",
+            "minimum": 0,
+            "example": 80
+          },
+          "comida": {
+            "type": "number",
+            "minimum": 0,
+            "example": 150
+          },
+          "hospedaje": {
+            "type": "number",
+            "minimum": 0,
+            "example": 0
+          },
+          "transporte": {
+            "type": "number",
+            "minimum": 0,
+            "example": 40
+          }
+        },
+        "required": [
+          "entradas",
+          "comida",
+          "hospedaje",
+          "transporte"
+        ]
+      },
+      "GeneratedItineraryResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItineraryItemResponseDto"
+            }
+          },
+          "costoTotal": {
+            "type": "number",
+            "minimum": 0,
+            "example": 270
+          },
+          "costoEstimado": {
+            "type": "number",
+            "minimum": 0,
+            "example": 270
+          },
+          "costoPorPersona": {
+            "type": "number",
+            "minimum": 0,
+            "example": 135
+          },
+          "duracionTotalMin": {
+            "type": "number",
+            "minimum": 0,
+            "example": 240
+          },
+          "advertencias": {
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "desglose": {
+            "$ref": "#/components/schemas/ItineraryBreakdownResponseDto"
+          }
+        },
+        "required": [
+          "items",
+          "costoTotal",
+          "costoEstimado",
+          "costoPorPersona",
+          "duracionTotalMin",
+          "advertencias",
+          "desglose"
+        ]
+      },
+      "RouteDetailPoiResponseDto": {
+        "type": "object",
+        "properties": {
+          "poiId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3c78617f-5e1f-49e4-8e61-06f3c732473b"
+          },
+          "orden": {
+            "type": "number",
+            "minimum": 1,
+            "example": 1
+          },
+          "duracionVisitaMin": {
+            "type": "number",
+            "minimum": 1,
+            "example": 60
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Museo de la ciudad"
+          },
+          "categoria": {
+            "type": "string",
+            "enum": [
+              "restaurante",
+              "hospedaje",
+              "artesania",
+              "aventura",
+              "cultural",
+              "naturaleza",
+              "transporte",
+              "otro"
+            ],
+            "example": "cultural"
+          },
+          "ubicacion": {
+            "type": "object",
+            "properties": {
+              "lat": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90,
+                "example": 19.4326
+              },
+              "lng": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180,
+                "example": -99.1332
+              }
+            },
+            "required": [
+              "lat",
+              "lng"
+            ]
+          },
+          "costoPromedio": {
+            "type": "number",
+            "minimum": 0,
+            "example": 80
+          }
+        },
+        "required": [
+          "poiId",
+          "orden",
+          "duracionVisitaMin",
+          "nombre",
+          "categoria",
+          "costoPromedio"
+        ]
+      },
+      "RouteDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "3c78617f-5e1f-49e4-8e61-06f3c732473b"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "original",
+              "comunitaria"
+            ],
+            "example": "original"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Un día en San Miguel"
+          },
+          "descripcion": {
+            "type": "object",
+            "nullable": true,
+            "example": "Recorrido por el centro histórico."
+          },
+          "costoEstimado": {
+            "type": "number",
+            "minimum": 0,
+            "example": 250
+          },
+          "duracionMin": {
+            "type": "number",
+            "minimum": 1,
+            "example": 240
+          },
+          "municipio": {
+            "$ref": "#/components/schemas/RouteMunicipalityResponseDto"
+          },
+          "autor": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RouteAuthorResponseDto"
+              }
+            ]
+          },
+          "pois": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RouteDetailPoiResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "titulo",
+          "descripcion",
+          "costoEstimado",
+          "duracionMin",
+          "municipio",
+          "autor",
+          "pois"
+        ]
+      }
+    }
+  }
+}
