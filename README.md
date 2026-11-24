@@ -22,7 +22,7 @@ To regenerate the checked-in OpenAPI contract without a running API, use `npm ru
 
 ## Seed data
 
-After starting the database, run `npm run seed:catalog` to apply migrations and idempotently seed four municipalities, 40 fictional POIs, and four Trekko Original routes.
+After starting the database, run `npm run seed:catalog` to apply migrations and idempotently seed Aguascalientes and its four Pueblos Mágicos with real landmark examples and five Trekko Original routes. Sample hours and prices are estimates; verify them with each site before visiting. Map data includes © OpenStreetMap contributors (ODbL).
 
 ## Quality checks
 

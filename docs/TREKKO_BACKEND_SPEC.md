@@ -984,9 +984,9 @@ Pasos: instalar → lint → typecheck → unit (con cobertura) → integración
 
 ## 15. Seeds y datos iniciales
 
-- **Municipios:** Aguascalientes (capital) y los Pueblos Mágicos del estado (**Calvillo, Real de Asientos, San José de Gracia** y el cuarto a confirmar — ver §18) con `centro` aproximado y `es_pueblo_magico`.
-- **POIs demo realistas** (≥ 60 en total, distribuidos por categoría y municipio) con coordenadas plausibles, horarios, costos y contacto ficticio. Marcar claramente datos ficticios.
-- **Rutas Trekko Originals** (≥ 6): una por municipio principal y temáticas (gastronómica, aventura, cultural).
+- **Municipios:** Aguascalientes (capital) y los cuatro Pueblos Mágicos (**Calvillo, Real de Asientos, San José de Gracia y Pabellón de Hidalgo**) con `centro` aproximado y `es_pueblo_magico`.
+- **POIs de muestra** (23): lugares reales de Aguascalientes y sus cuatro Pueblos Mágicos. Horarios y costos son estimados; sin reseñas ni contactos inventados.
+- **Rutas Trekko Originals** (5): una para Aguascalientes y una para cada Pueblo Mágico.
 - **Insignias base:** "Explorador de Calvillo", "Explorador de Real de Asientos", "Explorador de San José de Gracia", "Primer check-in", "Reseñador", "Creador de rutas", "Viajero puntual".
 - **Usuarios demo** (solo en `seed:demo`, nunca en producción): admin, entidad, anfitrión, creador, explorador. Contraseñas por variable de entorno.
 - Seeds **idempotentes** (se pueden ejecutar varias veces).
@@ -1039,7 +1039,7 @@ Un cambio **no está terminado** hasta cumplir **todo**:
 | # | Tema | Decisión propuesta |
 |---|---|---|
 | 1 | **Pagos** | El documento excluye "pasarela de pagos para reservas", pero incluye cobro de suscripción Premium con comisión ≈ 4 %. Se implementa solo el cobro de **suscripción** vía `PaymentProvider` abstracto; **no** hay reservas con pago. |
-| 2 | **Cuarto Pueblo Mágico** | El documento menciona "4 Pueblos Mágicos" sin listarlos todos (menciona Calvillo, Real de Asientos y San José de Gracia). Cargar como datos configurables; el cuarto queda pendiente de confirmar. |
+| 2 | **Cuarto Pueblo Mágico** | Pabellón de Hidalgo fue confirmado como el cuarto Pueblo Mágico de Aguascalientes; incluirlo en los datos base. |
 | 3 | **Facilidad para llegar** | Se califica por separado y **no** entra en la calificación global del POI (coherente con §5.3 del proyecto). |
 | 4 | **Puntos de reseña sin foto** | El documento solo da 20 pts por "reseña con foto"; se asume 10 pts sin foto. Configurable. |
 | 5 | **Empate en votación** | Gana "mantener itinerario". |
